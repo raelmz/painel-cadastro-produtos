@@ -25,7 +25,7 @@
 
 ## 📑 Índice
 
-`O problema` · `Como resolve` · `Funcionalidades` · `Stack` · `Como usar` · `Estrutura` · `Rodando localmente` · `Deploy` · `Decisões técnicas` · `Roadmap` · `Licença` · `Autor`
+`O problema` · `Como resolve` · `Capturas de tela` · `Funcionalidades` · `Stack` · `Como usar` · `Estrutura` · `Rodando localmente` · `Deploy` · `Decisões técnicas` · `Roadmap` · `Licença` · `Autor`
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
@@ -99,12 +99,35 @@ flowchart LR
   padrão (maiúsculas, acentos, unidade de embalagem etc.), evitando
   produtos duplicados no cadastro.
 
-> Reescrita em TypeScript/Next.js de um app Python/Streamlit anterior
-> (mesmo problema, agora como site publicável). Para o histórico
-> completo de decisões, regras de negócio e roadmap técnico, veja
-> **[`CONTEXTO_PROJETO.md`](./CONTEXTO_PROJETO.md)** — arquivo pensado
-> para colar no início de uma conversa com IA e continuar o
-> desenvolvimento sem perder contexto.
+> Reescrita em TypeScript/Next.js de um app Python/Streamlit anterior —
+> mesmo problema, agora como site publicável.
+
+<div align="right"><a href="#-índice">⬆ voltar ao topo</a></div>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
+
+## Capturas de tela
+
+<div align="center">
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Importação da base + contagem física**
+
+<img src="public/1.jpg" width="100%" alt="Tela do Verificador de Inventário: importação da base de produtos e área para colar a contagem física do estoque" />
+
+</td>
+<td width="50%" valign="top">
+
+**Relatório com divergências e candidatos**
+
+<img src="public/2.jpg" width="100%" alt="Tela do relatório do Verificador de Inventário, mostrando itens encontrados, divergências, itens a revisar e não encontrados, com score de cada candidato" />
+
+</td>
+</tr>
+</table>
+</div>
 
 <div align="right"><a href="#-índice">⬆ voltar ao topo</a></div>
 
@@ -280,7 +303,9 @@ src/
     fileParser.ts                       → Leitura tolerante de Excel/CSV
     storage.ts                           → Persistência em localStorage + backup/restore em JSON
     exportExcel.ts                        → Exportação do relatório em .xlsx formatado
-CONTEXTO_PROJETO.md               → Histórico de decisões, regras de negócio e roadmap (para retomar com IA)
+public/
+  1.jpg                                    → Captura de tela: importação da base + contagem física
+  2.jpg                                    → Captura de tela: relatório com divergências e candidatos
 LICENSE                            → Licença MIT
 ```
 
@@ -362,8 +387,7 @@ Para publicar sua própria versão:
   cada etapa só roda se a anterior não achou nada, e o fuzzy (último
   recurso) tem camadas extras de correção (viscosidade como quase-ID do
   produto, stopwords técnicas ignoradas, teto pra coincidência de número
-  solto) pra reduzir falso positivo/negativo. Detalhes completos em
-  `CONTEXTO_PROJETO.md`.
+  solto) pra reduzir falso positivo/negativo.
 - **Dicionário de equivalências configurável pelo usuário**, em vez de
   regras fixas de nomenclatura — é o que torna o projeto adaptável a
   qualquer catálogo de produtos, não só óleo automotivo.
@@ -382,20 +406,6 @@ Para publicar sua própria versão:
 - [ ] Fila de cadastro pendente pra itens não encontrados
 - [ ] Fallback semântico (embeddings) como última camada do matching
 
-Lista completa e o raciocínio por trás de cada item em
-[`CONTEXTO_PROJETO.md`](./CONTEXTO_PROJETO.md).
-
-## Continuando o desenvolvimento com IA
-
-Este projeto foi pensado para ser mantido em sessões separadas de IA
-(Claude ou outra). Para retomar:
-
-1. Abra uma nova conversa.
-2. Cole o conteúdo de `CONTEXTO_PROJETO.md`.
-3. Anexe ou aponte para o repositório atual.
-4. Descreva o que quer fazer a seguir.
-5. Peça para a IA atualizar o `CONTEXTO_PROJETO.md` ao final da sessão.
-
 <div align="right"><a href="#-índice">⬆ voltar ao topo</a></div>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
@@ -413,7 +423,7 @@ outros setores/empresas.
 
 <div align="center">
 
-Desenvolvido por **Israel Menezes** durante a Residência Tecnológica Jovem Tech / Inova.se, a partir de uma dor real de uma oficina mecânica.
+Desenvolvido por **Israel Menezes**, criado enquanto trabalhava diretamente no estoque de uma oficina mecânica — a dor de conferir o inventário físico contra um cadastro cheio de nomes duplicados era minha, no dia a dia, e o projeto nasceu pra resolver o próprio trabalho.
 
 [![GitHub](https://img.shields.io/badge/GitHub-raelmz-0F6E56?style=flat-square&logo=github&logoColor=F1F5F9)](https://github.com/raelmz)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Israel_Menezes-173404?style=flat-square&logo=linkedin&logoColor=F1F5F9)](https://www.linkedin.com/in/israel-menezes-perfil/)
