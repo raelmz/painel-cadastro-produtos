@@ -426,7 +426,7 @@ outros setores/empresas.
 Desenvolvido por **Israel Menezes**, criado enquanto trabalhava diretamente no estoque de uma oficina mecânica — a dor de conferir o inventário físico contra um cadastro cheio de nomes duplicados era minha, no dia a dia, e o projeto nasceu pra resolver o próprio trabalho.
 
 [![GitHub](https://img.shields.io/badge/GitHub-raelmz-0F6E56?style=flat-square&logo=github&logoColor=F1F5F9)](https://github.com/raelmz)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Israel_Menezes-173404?style=flat-square&logo=linkedin&logoColor=F1F5F9)](https://www.linkedin.com/in/israel-menezes-perfil/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Israel_Menezes-173404?style=flat-square&logo=linkedin&logoColor=F1F5F9)](https://www.linkedin.com/in/raelmz/)
 [![Portfólio](https://img.shields.io/badge/Portf%C3%B3lio-raeldev.vercel.app-444441?style=flat-square&logo=vercel&logoColor=F1F5F9)](https://raeldev.vercel.app)
 
 </div>
