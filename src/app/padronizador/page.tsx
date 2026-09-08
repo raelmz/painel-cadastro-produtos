@@ -1,274 +1,209 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
-import { Play, Download, Plus, Trash2, BookMarked } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Clipboard, Copy, Download, FileText, ListChecks, MessageSquareText, Settings2, Sparkles } from "lucide-react";
 import { ToolHeader } from "@/components/ToolHeader";
-import { StatusBadge } from "@/components/StatusBadge";
-import { storage } from "@/lib/storage";
-import { Synonym } from "@/lib/textUtils";
-import { checkItem, CheckItemResult, mergeMarcas } from "@/lib/padronizador";
+
+const PROMPT_MESTRE = [
+  "PROMPT MESTRE v7 — cole nas Instruções do Projeto (Claude)",
+  "Referência: Manual_SuperTrocaDeOleo_v7.md",
+  "",
+  "Você é um especialista em cadastro de produtos automotivos da Super Troca de Óleo.",
+  "",
+  "Sua função é padronizar e enriquecer produtos para o DigiSat, preenchendo apenas:",
+  "DESCRIÇÃO ATUALIZADA, MARCA, SUBGRUPO, UNIDADE e CARACTERÍSTICA.",
+  "",
+  "Nunca alterar CÓDIGO_INTERNO ou DESCRIÇÃO_ANTERIOR.",
+  "Nunca excluir linhas.",
+  "Sempre retornar exatamente uma linha para cada produto recebido.",
+  "",
+  "REGRA DE DESCRIÇÃO (LER COM ATENÇÃO — ERRO COMUM):",
+  "1. Primeiro escolha o SUBGRUPO do produto na lista fechada.",
+  "2. A descrição DEVE começar com o TIPO fixo correspondente a esse subgrupo (tabela 4.1 do manual v7). Nunca invente sinônimo do tipo (ex.: nunca escrever \"FILTRO AR PRIMARIO\" — o correto para subgrupo FILTRO DE AR MOTOR é sempre \"FILTRO DE AR MOTOR\").",
+  "3. Se o produto for óleo, fluido, graxa, aditivo ou ARLA: terminar a descrição com o volume/embalagem (ex.: 1L, 20L, 500ML).",
+  "4. Se o produto for peça unitária (filtro, pastilha, lâmpada, palheta, bateria, kit de filtros, acessório): NUNCA escrever \"UN\" ou qualquer unidade dentro da descrição. A unidade já vai na coluna UNIDADE separadamente.",
+  "   ❌ Errado: FILTRO DE AR MOTOR WEGA FAP2214 UN",
+  "   ✅ Correto: FILTRO DE AR MOTOR WEGA FAP2214",
+  "",
+  "Pesquise SEMPRE, em fontes confiáveis, antes de preencher aplicação recomendada, API, compatibilidade, viscosidade ou código de fabricante.",
+  "Priorize catálogos oficiais, TecDoc, Tecfil, Wega, Mann, Fram, Vox, Filtros Brasil, Bosch, NGK, Mobil, Motul, Shell, Petronas, Castrol, Lubrax, Heliar, Moura, Fras-le, Cobreq, TRW e sites de aplicação de autopeças.",
+  "",
+  "REGRA ANTI-PENDÊNCIA (MUITO IMPORTANTE):",
+  "PENDÊNCIA DE REVISÃO MANUAL não é um atalho para produtos \"trabalhosos\". É proibido usá-la só porque o produto tem marca pouco conhecida, código curto, ou exige uma busca adicional.",
+  "",
+  "Para QUALQUER produto que tenha um código de fabricante na descrição (ex: SNA-540, CSB-286, PD/1495, CSB-1322), você DEVE:",
+  "1. Pesquisar esse código exato, mesmo que a marca seja pouco conhecida.",
+  "2. Se não encontrar aplicação direta pela marca informada, pesquisar o código como possível referência cruzada de outros fabricantes (Fras-le, Cobreq, Bosch, TRW etc.), pois é comum marcas menores reutilizarem numeração de mercado.",
+  "3. Preencher CARACTERÍSTICA com os veículos/aplicações reais encontrados, listando múltiplos veículos separados por \" | \" quando aplicável (ex: FIAT PALIO 1998/2000 | FIAT SIENA 1998/2000).",
+  "4. Só usar PENDÊNCIA DE REVISÃO MANUAL se, depois de pesquisar de verdade, nenhuma aplicação for encontrada em nenhuma fonte, ou se a descrição de entrada for genuinamente incompleta/contraditória, ou tiver [VERIFICAR]/[VERIFICAR EMBALAGEM].",
+  "",
+  "Não é aceitável devolver PENDÊNCIA DE REVISÃO MANUAL sem antes ter feito essa pesquisa ativa. Trate cada produto individualmente — não generalize pendência para um lote inteiro só porque um item deu mais trabalho.",
+  "",
+  "SUBGRUPO:",
+  "Use somente a lista fechada de subgrupos do manual.",
+  "Não invente subgrupo novo.",
+  "Nunca usar ÓLEO LUBRIFICANTE.",
+  "Se não encaixar com segurança, preencher [VERIFICAR SUBGRUPO].",
+  "",
+  "CARACTERÍSTICA:",
+  "Seguir a regra de prioridade.",
+  "",
+  "Prioridade 1:",
+  "Sempre tentar primeiro veículo, montadora, motor, família ou homologação específica recomendada.",
+  "Exemplos:",
+  "VW/AUDI TSI",
+  "MERCEDES DIESEL COM DPF",
+  "CHEVROLET ONIX 2012/2019",
+  "",
+  "Prioridade 2:",
+  "Se o produto for de aplicação ampla/genérica e não houver recomendação específica confiável, usar exatamente um valor da lista fechada de fallback:",
+  "VEÍCULOS LEVES GASOLINA/FLEX",
+  "VEÍCULOS LEVES GASOLINA/FLEX MODERNOS",
+  "VEÍCULOS LEVES GASOLINA/FLEX ANTIGOS",
+  "CAMINHONETES/SUV GASOLINA/FLEX",
+  "VEÍCULOS LEVES DIESEL",
+  "CAMINHONETES/SUV DIESEL",
+  "CAMINHÕES/UTILITÁRIOS DIESEL",
+  "MOTOCICLETAS 4T",
+  "MOTOCICLETAS 2T",
+  "TRANSMISSÃO MANUAL/DIFERENCIAL",
+  "TRANSMISSÃO AUTOMÁTICA ATF",
+  "TRANSMISSÃO CVT",
+  "SISTEMA DE FREIO",
+  "SISTEMA DE ARREFECIMENTO",
+  "SISTEMA ARLA/SCR",
+  "USO UNIVERSAL AUTOMOTIVO",
+  "PENDÊNCIA DE REVISÃO MANUAL",
+  "",
+  "Nunca inventar variação ou sinônimo.",
+  "Não escrever CARROS DE PASSEIO, AUTOMÓVEIS GASOLINA, VEÍCULOS GASOLINA, CARROS FLEX ou qualquer variação fora da lista.",
+  "",
+  "Se a entrada estiver incompleta, conflitante ou marcada com [VERIFICAR], [VERIFICAR EMBALAGEM] ou informação insuficiente, preencher CARACTERÍSTICA com PENDÊNCIA DE REVISÃO MANUAL.",
+  "",
+  "Para óleos, não preencher a característica somente com normas técnicas como API, ACEA, VW, MB, Porsche ou Dexos.",
+  "Use essas normas para pesquisar a aplicação, mas converta o resultado em recomendação de veículos, motores, montadoras ou perfis.",
+  "",
+  "FORMATO DE SAÍDA (OBRIGATÓRIO — ERRO COMUM):",
+  "Retorne tabela Markdown somente com estas colunas, uma linha por produto, sem nenhum texto antes ou depois da tabela:",
+  "CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA",
+  "",
+  "Cada coluna deve estar separada por \" | \" (espaço, barra, espaço). Nunca concatene valores de colunas diferentes sem esse separador — cada linha precisa ter os 6 separadores internos entre as 7 colunas. Antes de responder, revise mentalmente cada linha para confirmar que os separadores estão todos presentes.",
+].join("\n");
+
+const PROMPT_INICIO = [
+  "Vamos iniciar o saneamento da base da Super Troca de Óleo.",
+  "Siga o Prompt Mestre e o Manual v7 rigorosamente.",
+  "Sempre pesquise antes de preencher compatibilidades e especificações técnicas — inclusive para marcas pouco conhecidas e códigos de fabricante curtos.",
+  "Use somente as listas fechadas de SUBGRUPO e CARACTERÍSTICA fallback.",
+  "A descrição deve sempre começar com o TIPO fixo da tabela 4.1 do manual (o mesmo nome do subgrupo), nunca um sinônimo livre.",
+  "Peça unitária (filtro, pastilha, lâmpada, palheta, bateria, kit, acessório) nunca leva \"UN\" na descrição.",
+  "PENDÊNCIA DE REVISÃO MANUAL é exceção rara, não atalho. Antes de usar essa categoria em qualquer produto, pesquise o código de fabricante e tente encontrar a aplicação real (veículo, montadora, motor). Só use pendência se, mesmo pesquisando, não encontrar nada confiável.",
+  "Divida lotes grandes em blocos de até 10 produtos quando houver filtros ou peças específicas, justamente para dar tempo de pesquisar cada código individualmente com atenção.",
+  "A tabela final deve usar sempre o separador \" | \" entre as 7 colunas, sem nenhuma linha grudada.",
+  "Quando estiver pronto, responda apenas:",
+  "Pronto para receber o primeiro lote.",
+].join("\n");
+
+const CHECKLIST = [
+  "A descrição começa com o TIPO fixo correspondente ao subgrupo.",
+  "Peças unitárias não têm UN ou outra unidade dentro da descrição.",
+  "Óleos, fluidos, graxas, aditivos e ARLA terminam com o volume.",
+  "CÓDIGO_INTERNO e DESCRIÇÃO_ANTERIOR permanecem inalterados.",
+  "Cada linha possui as sete colunas, separadas corretamente por barras.",
+  "SUBGRUPO e fallback de CARACTERÍSTICA usam somente os valores fechados do manual.",
+  "PENDÊNCIA DE REVISÃO MANUAL foi usada somente após pesquisa ou por falta real de informação.",
+];
 
 export default function PadronizadorPage() {
-  // Começa vazio (igual ao servidor, que não tem localStorage) e só
-  // carrega o valor real depois de montar — evita "Hydration failed"
-  // (o servidor sempre renderizava "Nenhuma equivalência cadastrada
-  // ainda", mesmo quando já havia sinônimos salvos, porque o
-  // inicializador de useState rodava direto no cliente na hidratação).
-  const [mounted, setMounted] = useState(false);
-  const [synonyms, setSynonyms] = useState<Synonym[]>([]);
+  const [numeroLote, setNumeroLote] = useState("001");
+  const [produtos, setProdutos] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [promptLote, setPromptLote] = useState("");
+  const [erroLote, setErroLote] = useState("");
 
-  useEffect(() => {
-    const loadedSynonyms = storage.getSinonimos();
-    const timer = setTimeout(() => {
-      setSynonyms(loadedSynonyms);
-      setMounted(true);
-    }, 0);
+  async function copiar(texto: string, identificador: string) {
+    await navigator.clipboard.writeText(texto);
+    setMensagem(identificador);
+    window.setTimeout(() => setMensagem(""), 1600);
+  }
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const [padrao, setPadrao] = useState("");
-  const [substituicao, setSubstituicao] = useState("");
-  const [erroSinonimo, setErroSinonimo] = useState("");
-
-  const [texto, setTexto] = useState("");
-  const [resultados, setResultados] = useState<CheckItemResult[] | null>(null);
-
-  function adicionarSinonimo() {
-    setErroSinonimo("");
-    if (!padrao.trim() || !substituicao.trim()) {
-      setErroSinonimo("Preencha os dois campos.");
+  function gerarPromptLote() {
+    if (!produtos.trim()) {
+      setErroLote("Cole a lista de produtos do lote antes de gerar.");
+      setPromptLote("");
       return;
     }
-    try {
-      new RegExp(padrao);
-    } catch {
-      setErroSinonimo("O padrão não é uma expressão regular válida.");
-      return;
-    }
-    const novo: Synonym = { id: uuid(), padrao: padrao.trim(), substituicao: substituicao.trim(), ativo: true };
-    const atualizados = [novo, ...synonyms];
-    setSynonyms(atualizados);
-    storage.setSinonimos(atualizados);
-    setPadrao("");
-    setSubstituicao("");
+    setErroLote("");
+    setPromptLote(montarPromptLote(numeroLote, produtos));
   }
-
-  function toggleSinonimo(id: string) {
-    const atualizados = synonyms.map((s) => (s.id === id ? { ...s, ativo: !s.ativo } : s));
-    setSynonyms(atualizados);
-    storage.setSinonimos(atualizados);
-  }
-
-  function removerSinonimo(id: string) {
-    const atualizados = synonyms.filter((s) => s.id !== id);
-    setSynonyms(atualizados);
-    storage.setSinonimos(atualizados);
-  }
-
-  function validar() {
-    const itens = texto.split("\n").map((l) => l.trim()).filter(Boolean);
-    if (!itens.length) return;
-    const marcas = mergeMarcas(synonyms.filter((s) => s.ativo && /^[A-Za-zÀ-ú ]+$/.test(s.substituicao)).map((s) => s.substituicao));
-    const ativos = synonyms.filter((s) => s.ativo);
-    const rows = itens.map((i) => checkItem(i, marcas, ativos));
-    setResultados(rows);
-    storage.addHistoricoPadronizacao({
-      executadoEm: new Date().toLocaleString("pt-BR"),
-      total: rows.length,
-      ok: rows.filter((r) => r.situacao === "✅ OK").length,
-      ajustaveis: rows.filter((r) => r.situacao.startsWith("⚠️")).length,
-      manual: rows.filter((r) => r.situacao.startsWith("❌")).length,
-    });
-  }
-
-  function exportarCSV() {
-    if (!resultados) return;
-    const header = ["Descrição original", "Situação", "Problemas encontrados", "Sugestão corrigida"];
-    const linhas = resultados.map((r) => [r.descricaoOriginal, r.situacao, r.problemas, r.sugestaoCorrigida]);
-    const csv = [header, ...linhas]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "padronizacao_produtos.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  const resumo = resultados
-    ? {
-        total: resultados.length,
-        ok: resultados.filter((r) => r.situacao === "✅ OK").length,
-        ajustaveis: resultados.filter((r) => r.situacao.startsWith("⚠️")).length,
-        manual: resultados.filter((r) => r.situacao.startsWith("❌")).length,
-      }
-    : null;
 
   return (
     <main className="flex-1">
       <div className="mx-auto w-full max-w-5xl px-6 py-12 md:py-16">
-        <ToolHeader
-          eyebrow="Estação 02"
-          title="Padronizador de Nomenclatura"
-          description="Cadastre as equivalências de nome dos seus produtos e valide listas para chegar sempre na mesma descrição padrão."
-          accentVar="--steel"
-        />
+        <ToolHeader eyebrow="Estação 02" title="Padronizador de Nomenclatura" description="Um roteiro de saneamento para preparar a IA, montar lotes consistentes e conferir a tabela antes de gravar no DigiSat." accentVar="--steel" />
 
-        {/* 1. Dicionário de equivalências */}
-        <Section title="1. Dicionário de equivalências" number="01">
-          <p className="text-sm text-(--muted) mb-4">
-            &ldquo;Padrão&rdquo; é o texto a ser substituído (aceita expressão regular simples, ex:{" "}
-            <code className="font-mono-data text-(--steel)">{"\\bELEMENTO FILTRANTE\\b"}</code>). &ldquo;Substituição&rdquo; é o
-            texto final. Comparação sempre em MAIÚSCULAS.
-          </p>
+        <Etapa numero="01" titulo="Configurar a IA uma única vez" icone={<Settings2 className="h-5 w-5" />}>
+          <p className="mb-4 text-sm text-(--muted)">Crie um projeto para o saneamento, abra as instruções do projeto e copie o Prompt Mestre abaixo.</p>
+          <BlocoPrompt texto={PROMPT_MESTRE} aoCopiar={() => copiar(PROMPT_MESTRE, "mestre")} copiado={mensagem === "mestre"} />
+        </Etapa>
 
-          <div className="rounded-xl border border-(--line) bg-white/2 p-5 mb-4">
-            <div className="grid sm:grid-cols-2 gap-4 mb-4">
-              <label className="block text-sm">
-                <span className="block text-xs text-(--muted) mb-1.5">Padrão (texto ou regex)</span>
-                <input
-                  value={padrao}
-                  onChange={(e) => setPadrao(e.target.value)}
-                  placeholder={"Ex: \\bELEMENTO FILTRANTE\\b"}
-                  className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2 text-sm font-mono-data focus:outline-none focus:border-(--steel)"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="block text-xs text-(--muted) mb-1.5">Substituição</span>
-                <input
-                  value={substituicao}
-                  onChange={(e) => setSubstituicao(e.target.value)}
-                  placeholder="Ex: FILTRO DE ÓLEO"
-                  className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2 text-sm font-mono-data focus:outline-none focus:border-(--steel)"
-                />
-              </label>
-            </div>
-            {erroSinonimo && <p className="text-sm text-red-400 mb-3">{erroSinonimo}</p>}
-            <button
-              onClick={adicionarSinonimo}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-(--steel) text-[#0e1a1e] text-sm font-semibold hover:brightness-110 transition"
-            >
-              <Plus className="w-4 h-4" /> Adicionar equivalência
-            </button>
+        <Etapa numero="02" titulo="Adicionar o manual de referência" icone={<FileText className="h-5 w-5" />}>
+          <div className="flex gap-4 rounded-lg border border-dashed border-(--line) bg-white/2 p-5">
+            <FileText className="h-6 w-6 shrink-0 text-(--steel)" />
+            <div><p className="font-medium">Anexe o arquivo Manual_SuperTrocaDeOleo_v7.md ao projeto da IA.</p><p className="mt-1 text-sm text-(--muted)">Faça isso uma vez. O manual é a fonte das regras de subgrupo, tipo fixo, unidade e característica.</p><a href="/Manual_SuperTrocaDeOleo_v7.md" download className="mt-4 inline-flex items-center gap-2 rounded-lg border border-(--steel)/50 px-3 py-2 text-xs font-medium text-(--steel) hover:bg-(--steel)/10"><Download className="h-3.5 w-3.5" />Baixar Manual v7</a></div>
           </div>
+        </Etapa>
 
-          {mounted && synonyms.length > 0 ? (
-            <div className="rounded-xl border border-(--line) divide-y divide-(--line) overflow-hidden">
-              {synonyms.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 px-4 py-3 flex-wrap">
-                  <BookMarked className="w-4 h-4 text-(--muted) shrink-0" />
-                  <code className="font-mono-data text-xs bg-white/5 px-2 py-1 rounded text-(--muted)">{s.padrao}</code>
-                  <span className="text-(--muted)">→</span>
-                  <span className="text-sm font-medium">{s.substituicao}</span>
-                  <div className="ml-auto flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-xs text-(--muted)">
-                      <input type="checkbox" checked={s.ativo} onChange={() => toggleSinonimo(s.id)} className="accent-(--steel)" />
-                      Ativo
-                    </label>
-                    <button onClick={() => removerSinonimo(s.id)} className="text-(--muted) hover:text-red-400 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-(--muted)">Nenhuma equivalência cadastrada ainda.</p>
-          )}
-        </Section>
+        <Etapa numero="03" titulo="Abrir uma sessão de trabalho" icone={<MessageSquareText className="h-5 w-5" />}>
+          <p className="mb-4 text-sm text-(--muted)">No começo de cada nova conversa, envie este texto para alinhar as regras antes do primeiro lote.</p>
+          <BlocoPrompt texto={PROMPT_INICIO} aoCopiar={() => copiar(PROMPT_INICIO, "inicio")} copiado={mensagem === "inicio"} />
+        </Etapa>
 
-        {/* 2. Validar lista */}
-        <Section title="2. Validar lista de nomes" number="02">
-          <p className="text-sm text-(--muted) mb-3">Um produto por linha.</p>
-          <textarea
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            rows={8}
-            placeholder={"Ex:\nELEMENTO FILTRANTE H100\nFILTRO LUBRIFICANTE H100\nOleo Motorcraft 5w-30 Sintetico 1 Litro"}
-            className="w-full rounded-xl border border-(--line) bg-white/2 px-4 py-3 text-sm font-mono-data placeholder:text-(--muted)/60 focus:outline-none focus:border-(--steel) resize-y"
-          />
-          <button
-            onClick={validar}
-            disabled={!texto.trim()}
-            className="mt-4 flex items-center gap-2 px-5 py-2.5 rounded-lg bg-(--steel) text-[#0e1a1e] text-sm font-semibold disabled:opacity-40 hover:brightness-110 transition"
-          >
-            <Play className="w-4 h-4" /> Validar lista
-          </button>
-        </Section>
+        <Etapa numero="04" titulo="Gerar prompt do lote" icone={<Sparkles className="h-5 w-5" />}>
+          <p className="mb-4 text-sm text-(--muted)">Cole a lista de produtos do lote abaixo, defina o número e gere o prompt completo pronto para copiar.</p>
+          <div className="grid gap-4 rounded-lg border border-(--line) bg-white/2 p-5">
+            <label className="w-full max-w-40 text-sm"><span className="mb-1.5 block text-xs text-(--muted)">Número do lote</span><input value={numeroLote} onChange={(evento) => setNumeroLote(evento.target.value)} className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2 font-mono-data text-sm focus:border-(--steel) focus:outline-none" /></label>
+            <label className="text-sm"><span className="mb-1.5 block text-xs text-(--muted)">Produtos do lote</span><textarea value={produtos} onChange={(evento) => setProdutos(evento.target.value)} rows={9} placeholder={"5819 TR20457 1 ELEMENTO FILTRANTE AR PRIMARIO\n3549 FAP2214 FILTRO AR WEGA"} className="w-full resize-y rounded-lg border border-(--line) bg-(--surface) px-3 py-3 font-mono-data text-sm placeholder:text-(--muted)/60 focus:border-(--steel) focus:outline-none" /></label>
+            <div className="flex flex-wrap items-center gap-3"><button onClick={gerarPromptLote} className="flex items-center gap-2 rounded-lg bg-(--steel) px-4 py-2.5 text-sm font-semibold text-[#0e1a1e]"><Sparkles className="h-4 w-4" />Gerar prompt do lote</button>{erroLote && <span className="text-sm text-red-400">{erroLote}</span>}</div>
+          </div>
+          {promptLote && <div className="mt-4"><p className="mb-2 font-mono-data text-xs uppercase tracking-wide text-(--steel)">Prompt pronto para copiar</p><BlocoPrompt texto={promptLote} aoCopiar={() => copiar(promptLote, "lote")} copiado={mensagem === "lote"} /></div>}
+        </Etapa>
 
-        {/* 3. Relatório */}
-        {resultados && resumo && (
-          <Section title="3. Relatório" number="03">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-              <Metric label="✅ OK" value={resumo.ok} color="var(--ok)" />
-              <Metric label="⚠️ Ajustes automáticos" value={resumo.ajustaveis} color="var(--accent)" />
-              <Metric label="❌ Revisão manual" value={resumo.manual} color="var(--danger)" />
-            </div>
-
-            <div className="rounded-xl border border-(--line) overflow-hidden">
-              <div className="overflow-x-auto max-h-130">
-                <table className="w-full text-sm">
-                  <thead className="bg-white/3 sticky top-0">
-                    <tr className="text-left text-xs text-(--muted) uppercase tracking-wide">
-                      <th className="px-4 py-3 font-medium">Descrição original</th>
-                      <th className="px-4 py-3 font-medium">Situação</th>
-                      <th className="px-4 py-3 font-medium">Problemas encontrados</th>
-                      <th className="px-4 py-3 font-medium">Sugestão corrigida</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resultados.map((r, i) => (
-                      <tr key={i} className="border-t border-(--line) hover:bg-white/2">
-                        <td className="px-4 py-3 font-mono-data">{r.descricaoOriginal}</td>
-                        <td className="px-4 py-3">
-                          <StatusBadge situacao={r.situacao} />
-                        </td>
-                        <td className="px-4 py-3 text-(--muted)">{r.problemas}</td>
-                        <td className="px-4 py-3 font-medium">{r.sugestaoCorrigida}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <button
-              onClick={exportarCSV}
-              className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-lg border border-(--line) text-sm hover:bg-white/5 transition"
-            >
-              <Download className="w-4 h-4" /> Exportar CSV
-            </button>
-          </Section>
-        )}
+        <Etapa numero="05" titulo="Conferir antes de gravar" icone={<ListChecks className="h-5 w-5" />}>
+          <ul className="divide-y divide-(--line) overflow-hidden rounded-lg border border-(--line)">{CHECKLIST.map((item) => <li key={item} className="flex gap-3 px-4 py-3 text-sm text-(--muted)"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-(--steel)" />{item}</li>)}</ul>
+        </Etapa>
       </div>
     </main>
   );
 }
 
-function Section({ title, number, children }: { title: string; number: string; children: React.ReactNode }) {
-  return (
-    <section className="mb-10">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="font-mono-data text-xs text-(--muted)">{number}</span>
-        <h2 className="font-display text-xl font-semibold">{title}</h2>
-        <div className="h-px flex-1 bg-(--line)" />
-      </div>
-      {children}
-    </section>
-  );
+function montarPromptLote(numero: string, produtos: string): string {
+  return [
+    "LOTE " + (numero.trim() || "001"),
+    "Atualize todos os produtos abaixo seguindo o Prompt Mestre e o Manual v7.",
+    "",
+    "Lembretes rápidos deste lote:",
+    "- A descrição começa com o TIPO fixo do subgrupo (tabela 4.1) — nunca sinônimo livre.",
+    "- Peça unitária (filtro, pastilha, lâmpada, palheta, bateria, kit, acessório): NUNCA colocar \"UN\" na descrição.",
+    "- Óleo/fluido/graxa/aditivo/ARLA: terminar a descrição com o volume (1L, 500ML, 20L etc.).",
+    "",
+    "Para CARACTERÍSTICA, seguir a prioridade do manual:",
+    "1. Primeiro recomendação específica de veículo, montadora, motor, família ou homologação — PESQUISE o código de fabricante de cada produto antes de decidir que não há aplicação específica.",
+    "2. Se, mesmo após pesquisa, o produto for comprovadamente genérico, usar somente uma categoria da lista fechada de fallback.",
+    "3. Use PENDÊNCIA DE REVISÃO MANUAL apenas se, depois de pesquisar, não encontrar nenhuma aplicação confiável, ou se houver [VERIFICAR], [VERIFICAR EMBALAGEM] ou dado realmente insuficiente/contraditório.",
+    "IMPORTANTE: não retorne PENDÊNCIA DE REVISÃO MANUAL sem antes ter pesquisado o código de fabricante de cada item individualmente. Pesquisa insuficiente não é motivo válido para pendência.",
+    "",
+    "Retorne somente a tabela final com as colunas, usando sempre o separador \" | \" entre elas, uma linha por produto, sem nenhum texto antes ou depois:",
+    "CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA",
+    "",
+    produtos.trim(),
+  ].join("\n");
 }
 
-function Metric({ label, value, color }: { label: string; value: number; color?: string }) {
-  return (
-    <div className="rounded-xl border border-(--line) bg-white/2 px-4 py-3">
-      <p className="text-2xl font-display font-semibold" style={{ color: color ?? "var(--foreground)" }}>
-        {value}
-      </p>
-      <p className="text-xs text-(--muted) mt-0.5">{label}</p>
-    </div>
-  );
+function Etapa({ numero, titulo, icone, children }: { numero: string; titulo: string; icone: React.ReactNode; children: React.ReactNode }) {
+  return <section className="mb-8 border-b border-(--line) pb-8 last:border-0"><div className="mb-4 flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--steel)/40 font-mono-data text-xs text-(--steel)">{numero}</span><span className="text-(--steel)">{icone}</span><h2 className="font-display text-xl font-semibold">{titulo}</h2></div>{children}</section>;
+}
+
+function BlocoPrompt({ texto, aoCopiar, copiado }: { texto: string; aoCopiar: () => void; copiado: boolean }) {
+  return <div className="overflow-hidden rounded-lg border border-(--line) bg-(--surface)"><pre className="max-h-95 overflow-auto whitespace-pre-wrap p-4 font-mono-data text-xs leading-relaxed text-(--foreground)/90">{texto}</pre><div className="flex justify-end border-t border-(--line) bg-white/2 p-3"><button onClick={aoCopiar} className="flex items-center gap-2 rounded-lg border border-(--steel)/50 px-3 py-2 text-xs font-medium text-(--steel) hover:bg-(--steel)/10">{copiado ? <Clipboard className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copiado ? "Copiado" : "Copiar prompt"}</button></div></div>;
 }
