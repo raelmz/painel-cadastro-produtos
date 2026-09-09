@@ -88,6 +88,14 @@ const PROMPT_MESTRE = [
   "CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA",
   "",
   "Cada coluna deve estar separada por \" | \" (espaço, barra, espaço). Nunca concatene valores de colunas diferentes sem esse separador — cada linha precisa ter os 6 separadores internos entre as 7 colunas. Antes de responder, revise mentalmente cada linha para confirmar que os separadores estão todos presentes.",
+  "",
+  "FORMATAÇÃO VISUAL DA TABELA (OBRIGATÓRIA):",
+  "A resposta precisa ser uma tabela Markdown renderizável, começando com barra vertical e contendo obrigatoriamente estas duas primeiras linhas:",
+  "| CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA |",
+  "| --- | --- | --- | --- | --- | --- | --- |",
+  "Depois, retorne uma linha de produto para cada item, também começando e terminando com barra vertical.",
+  "Não use bloco de código, listas, explicações, avisos ou texto antes ou depois da tabela.",
+  "Antes de enviar, confirme que todas as linhas de produto têm 7 células, 6 separadores internos e as barras nas duas extremidades. Se qualquer linha falhar, corrija a tabela inteira antes de responder.",
 ].join("\n");
 
 const PROMPT_INICIO = [
@@ -120,6 +128,7 @@ export default function PadronizadorPage() {
   const [mensagem, setMensagem] = useState("");
   const [promptLote, setPromptLote] = useState("");
   const [erroLote, setErroLote] = useState("");
+  const [respostaParaCorrigir, setRespostaParaCorrigir] = useState("");
 
   async function copiar(texto: string, identificador: string) {
     await navigator.clipboard.writeText(texto);
@@ -172,6 +181,12 @@ export default function PadronizadorPage() {
         <Etapa numero="05" titulo="Conferir antes de gravar" icone={<ListChecks className="h-5 w-5" />}>
           <ul className="divide-y divide-(--line) overflow-hidden rounded-lg border border-(--line)">{CHECKLIST.map((item) => <li key={item} className="flex gap-3 px-4 py-3 text-sm text-(--muted)"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-(--steel)" />{item}</li>)}</ul>
         </Etapa>
+
+        <Etapa numero="06" titulo="Corrigir uma resposta fora da tabela" icone={<Clipboard className="h-5 w-5" />}>
+          <p className="mb-4 text-sm text-(--muted)">Se a IA devolver texto solto, cole a resposta aqui e envie o prompt de correção gerado. Ele pede somente a reestruturação da tabela, sem alterar os dados.</p>
+          <textarea value={respostaParaCorrigir} onChange={(evento) => setRespostaParaCorrigir(evento.target.value)} rows={7} placeholder="Cole aqui a resposta que precisa ser formatada..." className="w-full resize-y rounded-lg border border-(--line) bg-(--surface) px-3 py-3 font-mono-data text-sm placeholder:text-(--muted)/60 focus:border-(--steel) focus:outline-none" />
+          {respostaParaCorrigir.trim() && <div className="mt-4"><BlocoPrompt texto={montarPromptCorrecao(respostaParaCorrigir)} aoCopiar={() => copiar(montarPromptCorrecao(respostaParaCorrigir), "correcao")} copiado={mensagem === "correcao"} /></div>}
+        </Etapa>
       </div>
     </main>
   );
@@ -196,7 +211,29 @@ function montarPromptLote(numero: string, produtos: string): string {
     "Retorne somente a tabela final com as colunas, usando sempre o separador \" | \" entre elas, uma linha por produto, sem nenhum texto antes ou depois:",
     "CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA",
     "",
+    "FORMATAÇÃO OBRIGATÓRIA DESTA RESPOSTA:",
+    "A primeira linha deve ser: | CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA |",
+    "A segunda linha deve ser: | --- | --- | --- | --- | --- | --- | --- |",
+    "Todas as linhas de produto devem começar e terminar com barra vertical.",
+    "Não use bloco de código nem texto antes ou depois da tabela.",
+    "Antes de enviar, conte 7 células e 6 separadores internos em cada linha de produto. Se uma linha estiver fora do padrão, corrija toda a tabela antes de responder.",
+    "",
     produtos.trim(),
+  ].join("\n");
+}
+
+function montarPromptCorrecao(resposta: string): string {
+  return [
+    "Reformate a resposta abaixo como uma tabela Markdown renderizável.",
+    "Não altere nenhum dado, produto, código, descrição, marca, subgrupo, unidade ou característica. Corrija somente a estrutura visual.",
+    "Retorne apenas a tabela, sem bloco de código e sem explicações.",
+    "Use exatamente estas duas primeiras linhas:",
+    "| CÓDIGO_INTERNO | DESCRIÇÃO_ANTERIOR | DESCRIÇÃO_ATUALIZADA | MARCA | SUBGRUPO | UNIDADE | CARACTERÍSTICA |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    "Cada linha de produto deve ter sete células e começar e terminar com barra vertical.",
+    "",
+    "RESPOSTA A REFORMATAR:",
+    resposta.trim(),
   ].join("\n");
 }
 
