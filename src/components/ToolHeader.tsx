@@ -13,24 +13,24 @@ export function ToolHeader({
   accentVar?: "--accent" | "--steel";
 }) {
   return (
-    <header className="mb-10">
+    <header className="mb-10 border-b border-(--line) pb-8">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-(--muted) hover:text-(--foreground) transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4" />
         Painel
       </Link>
       <p
-        className="font-mono-data text-xs tracking-[0.25em] mb-3 uppercase"
+        className="font-mono-data text-[13px] mb-3"
         style={{ color: `var(${accentVar})` }}
       >
         {eyebrow}
       </p>
-      <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">
+      <h1 className="font-display text-3xl md:text-4xl font-medium tracking-tight">
         {title}
       </h1>
-      <p className="mt-3 max-w-2xl text-[var(--muted)] text-sm md:text-base">
+      <p className="mt-3 max-w-2xl text-(--muted) text-sm md:text-base leading-relaxed">
         {description}
       </p>
     </header>

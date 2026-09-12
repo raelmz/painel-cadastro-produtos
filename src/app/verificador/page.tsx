@@ -242,7 +242,7 @@ export default function VerificadorPage() {
   const temBaseMeta = mounted && baseMeta !== null;
 
   return (
-    <main className="flex-1">
+    <main className="flex-1 bg-workshop min-h-screen">
       <div className="mx-auto w-full max-w-5xl px-6 py-12 md:py-16">
         <ToolHeader
           eyebrow="Estação 01"
@@ -251,24 +251,24 @@ export default function VerificadorPage() {
           accentVar="--accent"
         />
 
-        <div className="flex items-center justify-between flex-wrap gap-3 -mt-6 mb-10">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-10">
           <Link
             href="/historico"
-            className="inline-flex items-center gap-1.5 text-xs text-(--muted) hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-(--muted) hover:text-(--foreground) transition-colors"
           >
             <History className="w-3.5 h-3.5" /> Ver histórico de verificações
           </Link>
           <div className="flex items-center gap-2">
             <button
               onClick={baixarBackup}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-(--line) hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 border border-(--line-strong) hover:bg-white/5 transition-colors"
               title="Baixa um .json com base, sinônimos e históricos — para restaurar em outro navegador/computador"
             >
               <DatabaseBackup className="w-3.5 h-3.5" /> Baixar backup
             </button>
             <button
               onClick={() => backupInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-(--line) hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 border border-(--line-strong) hover:bg-white/5 transition-colors"
             >
               <UploadCloud className="w-3.5 h-3.5" /> Restaurar backup
             </button>
@@ -282,15 +282,15 @@ export default function VerificadorPage() {
           </div>
         </div>
         {avisoBackup && (
-          <p className="-mt-8 mb-8 text-xs text-(--muted) rounded-lg border border-(--line) bg-white/2 px-3 py-2">
+          <p className="-mt-8 mb-8 text-xs text-(--muted) border border-(--line) bg-white/[0.015] px-3 py-2">
             {avisoBackup}
           </p>
         )}
 
         {/* 1. Base de produtos */}
-        <Section title="1. Base de produtos" number="01">
+        <Section title="Base de produtos" number="01">
           {temBaseMeta ? (
-            <div className="flex items-center justify-between gap-4 flex-wrap rounded-xl border border-(--line) bg-white/2 px-5 py-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap border border-(--line) bg-white/[0.015] px-5 py-4">
               <div className="flex items-center gap-3">
                 <PackageSearch className="w-5 h-5 text-(--accent)" />
                 <div>
@@ -303,13 +303,13 @@ export default function VerificadorPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs px-3 py-2 rounded-lg border border-(--line) hover:bg-white/5 transition-colors"
+                  className="text-xs px-3 py-2 border border-(--line-strong) hover:bg-white/5 transition-colors"
                 >
                   Trocar base
                 </button>
                 <button
                   onClick={limparBase}
-                  className="text-xs px-3 py-2 rounded-lg border border-(--line) hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors flex items-center gap-1.5"
+                  className="text-xs px-3 py-2 border border-(--line-strong) hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors flex items-center gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Remover
                 </button>
@@ -333,7 +333,7 @@ export default function VerificadorPage() {
           )}
 
           {parsedSheet && (
-            <div className="mt-4 rounded-xl border border-(--line) bg-white/2 p-5 space-y-4">
+            <div className="mt-4 border border-(--line) bg-white/[0.015] p-5 space-y-4">
               <p className="text-sm text-(--muted)">
                 Confirme qual coluna é qual antes de importar ({parsedSheet.rows.length} linhas detectadas):
               </p>
@@ -350,7 +350,7 @@ export default function VerificadorPage() {
               <button
                 onClick={confirmarImportacao}
                 disabled={!colCodigo || !colDescricao}
-                className="px-4 py-2.5 rounded-lg bg-(--accent) text-[#14171a] text-sm font-semibold disabled:opacity-40 hover:brightness-110 transition"
+                className="px-4 py-2.5 border border-(--accent) bg-(--accent) text-[#14171a] text-sm font-semibold disabled:opacity-40 disabled:border-(--line-strong) disabled:bg-transparent disabled:text-(--muted) hover:bg-(--accent-strong) hover:border-(--accent-strong) transition-colors"
               >
                 Confirmar importação
               </button>
@@ -359,7 +359,7 @@ export default function VerificadorPage() {
         </Section>
 
         {/* 2. Contagem física */}
-        <Section title="2. Contagem física do estoque" number="02">
+        <Section title="Contagem física do estoque" number="02">
           <p className="text-sm text-(--muted) mb-3">
             Um produto por linha — digite ou cole a lista contada fisicamente na oficina.
           </p>
@@ -368,7 +368,7 @@ export default function VerificadorPage() {
             onChange={(e) => setContagem(e.target.value)}
             rows={8}
             placeholder={"Ex:\nOleo Motorcraft 5w-30\nFILTRO OLEO WO130\nIPC-403"}
-            className="w-full rounded-xl border border-(--line) bg-white/2 px-4 py-3 text-sm font-mono-data placeholder:text-(--muted)/60 focus:outline-none focus:border-(--accent) resize-y"
+            className="w-full border border-(--line-strong) bg-(--surface) px-4 py-3 text-sm font-mono-data placeholder:text-(--muted-2) focus:outline-none focus:border-(--accent) resize-y transition-colors"
           />
           <div className="mt-4 flex items-center gap-4 flex-wrap">
             <label className="flex items-center gap-3 text-sm text-(--muted)">
@@ -381,12 +381,12 @@ export default function VerificadorPage() {
                 onChange={(e) => setThreshold(Number(e.target.value))}
                 className="accent-(--accent)"
               />
-              <span className="font-mono-data text-foreground">{threshold}%</span>
+              <span className="font-mono-data text-(--foreground)">{threshold}%</span>
             </label>
             <button
               onClick={iniciarVerificacao}
               disabled={!temBase || !contagem.trim()}
-              className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-lg bg-(--accent) text-[#14171a] text-sm font-semibold disabled:opacity-40 hover:brightness-110 transition"
+              className="ml-auto flex items-center gap-2 px-5 py-2.5 border border-(--accent) bg-(--accent) text-[#14171a] text-sm font-semibold disabled:opacity-40 disabled:border-(--line-strong) disabled:bg-transparent disabled:text-(--muted) hover:bg-(--accent-strong) hover:border-(--accent-strong) transition-colors"
             >
               <Play className="w-4 h-4" /> Iniciar verificação
             </button>
@@ -398,8 +398,8 @@ export default function VerificadorPage() {
 
         {/* 3. Resultado */}
         {resultados && resumo && (
-          <Section title="3. Relatório" number="03">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <Section title="Relatório" number="03">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px mb-5 border border-(--line) bg-(--line)">
               <Metric label="Total" value={resumo.total} />
               <Metric label="Encontrados" value={resumo.encontrados} color="var(--ok)" />
               <Metric label="Divergências" value={resumo.divergencias} color="var(--accent)" />
@@ -441,15 +441,15 @@ export default function VerificadorPage() {
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar no relatório..."
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-(--line) bg-(--surface) focus:outline-none focus:border-(--accent) w-48"
+                  className="pl-8 pr-3 py-1.5 text-xs border border-(--line-strong) bg-(--surface) focus:outline-none focus:border-(--accent) w-48 transition-colors"
                 />
               </div>
             </div>
 
-            <div className="rounded-xl border border-(--line) overflow-hidden">
+            <div className="border border-(--line) overflow-hidden">
               <div className="overflow-x-auto max-h-150">
                 <table className="w-full text-sm">
-                  <thead className="bg-white/3 sticky top-0">
+                  <thead className="bg-white/[0.03] sticky top-0">
                     <tr className="text-left text-xs text-(--muted) uppercase tracking-wide">
                       <th className="px-4 py-3 font-medium w-6"></th>
                       <th className="px-4 py-3 font-medium">Produto pesquisado</th>
@@ -474,7 +474,7 @@ export default function VerificadorPage() {
                       return (
                         <Fragment key={i}>
                           <tr
-                            className={`border-t border-(--line) hover:bg-white/2 ${
+                            className={`border-t border-(--line) hover:bg-white/[0.02] ${
                               temVariosCandidatos ? "cursor-pointer" : ""
                             }`}
                             onClick={() => temVariosCandidatos && toggleExpandido(i)}
@@ -512,7 +512,7 @@ export default function VerificadorPage() {
                             </td>
                           </tr>
                           {aberto && temVariosCandidatos && (
-                            <tr className="bg-white/1.5 border-t border-(--line)">
+                            <tr className="bg-white/[0.015] border-t border-(--line)">
                               <td></td>
                               <td colSpan={5} className="px-4 py-3">
                                 <table className="w-full text-xs">
@@ -540,10 +540,10 @@ export default function VerificadorPage() {
                                               e.stopPropagation();
                                               confirmarCandidato(i, c.codigo);
                                             }}
-                                            className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
+                                            className={`text-[11px] px-2 py-1 border transition-colors ${
                                               codigoConfirmado === c.codigo
                                                 ? "border-(--ok) text-(--ok) bg-(--ok)/10"
-                                                : "border-(--line) text-(--muted) hover:text-foreground hover:border-(--accent)/50"
+                                                : "border-(--line-strong) text-(--muted) hover:text-(--foreground) hover:border-(--accent)/50"
                                             }`}
                                           >
                                             {codigoConfirmado === c.codigo ? "Confirmado" : "Confirmar"}
@@ -568,14 +568,14 @@ export default function VerificadorPage() {
               <button
                 onClick={exportarExcelClick}
                 disabled={exportandoExcel}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-(--accent) text-[#14171a] text-sm font-semibold hover:brightness-110 transition disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2.5 border border-(--accent) bg-(--accent) text-[#14171a] text-sm font-semibold hover:bg-(--accent-strong) hover:border-(--accent-strong) transition-colors disabled:opacity-50"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 {exportandoExcel ? "Gerando planilha..." : "Exportar Excel (.xlsx)"}
               </button>
               <button
                 onClick={exportarCSV}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-(--line) text-sm hover:bg-white/5 transition"
+                className="flex items-center gap-2 px-4 py-2.5 border border-(--line-strong) text-sm hover:bg-white/5 transition-colors"
               >
                 <Download className="w-4 h-4" /> Exportar CSV
               </button>
@@ -589,11 +589,12 @@ export default function VerificadorPage() {
 
 function Section({ title, number, children }: { title: string; number: string; children: React.ReactNode }) {
   return (
-    <section className="mb-10">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="font-mono-data text-xs text-(--muted)">{number}</span>
-        <h2 className="font-display text-xl font-semibold">{title}</h2>
-        <div className="h-px flex-1 bg-(--line)" />
+    <section className="mb-10 border-b border-(--line) pb-10 last:border-0 last:pb-0">
+      <div className="mb-6 flex items-center gap-3.5">
+        <span className="flex h-9 w-9 items-center justify-center border border-(--accent)/30 bg-(--accent)/10 font-mono-data text-xs font-bold text-(--accent)">
+          {number}
+        </span>
+        <h2 className="font-display text-2xl font-medium tracking-tight">{title}</h2>
       </div>
       {children}
     </section>
@@ -604,10 +605,10 @@ function FiltroChip({ label, ativo, onClick }: { label: string; ativo: boolean; 
   return (
     <button
       onClick={onClick}
-      className={`text-xs px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${
+      className={`text-xs px-3 py-1.5 border transition-colors whitespace-nowrap ${
         ativo
           ? "border-(--accent) bg-(--accent)/15 text-(--accent)"
-          : "border-(--line) text-(--muted) hover:text-foreground hover:border-(--accent)/40"
+          : "border-(--line-strong) text-(--muted) hover:text-(--foreground) hover:border-(--accent)/40"
       }`}
     >
       {label}
@@ -617,8 +618,8 @@ function FiltroChip({ label, ativo, onClick }: { label: string; ativo: boolean; 
 
 function Metric({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
-    <div className="rounded-xl border border-(--line) bg-white/2 px-4 py-3">
-      <p className="text-2xl font-display font-semibold" style={{ color: color ?? "var(--foreground)" }}>
+    <div className="bg-(--surface) px-4 py-3">
+      <p className="text-2xl font-display font-medium" style={{ color: color ?? "var(--foreground)" }}>
         {value}
       </p>
       <p className="text-xs text-(--muted) mt-0.5">{label}</p>
@@ -634,7 +635,7 @@ function UploadBox({
   inputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   return (
-    <label className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-(--line) bg-white/2 px-6 py-12 cursor-pointer hover:border-(--accent)/50 transition-colors text-center">
+    <label className="flex flex-col items-center justify-center gap-3 border border-dashed border-(--line-strong) bg-white/[0.015] px-6 py-12 cursor-pointer hover:border-(--accent)/50 transition-colors text-center">
       <Upload className="w-7 h-7 text-(--muted)" />
       <div>
         <p className="text-sm font-medium">Clique para importar a base (.xlsx, .xls ou .csv)</p>
@@ -668,7 +669,7 @@ function ColumnSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2 text-sm focus:outline-none focus:border-(--accent)"
+        className="w-full border border-(--line-strong) bg-(--surface) px-3 py-2 text-sm focus:outline-none focus:border-(--accent) transition-colors"
       >
         {options.map((o) => (
           <option key={o} value={o}>

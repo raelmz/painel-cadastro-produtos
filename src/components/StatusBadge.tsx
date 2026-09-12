@@ -1,5 +1,5 @@
 export function StatusBadge({ situacao }: { situacao: string }) {
-  let cls = "bg-white/5 text-[var(--muted)] border-[var(--line)]";
+  let cls = "bg-white/5 text-(--muted) border-(--line-strong)";
   if (situacao.startsWith("✅")) {
     cls = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
   } else if (situacao.startsWith("⚠️")) {
@@ -13,7 +13,7 @@ export function StatusBadge({ situacao }: { situacao: string }) {
   }
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-md border px-2 py-1 text-xs font-medium ${cls}`}
+      className={`inline-flex items-center whitespace-nowrap border px-2 py-1 text-xs font-medium ${cls}`}
     >
       {situacao}
     </span>
